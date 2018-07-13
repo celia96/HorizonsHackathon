@@ -1,0 +1,20 @@
+{
+  "expo": {
+    "name": "camerja",
+    "description": "An example of using the Expo.Camera API. http://github.com/expo/camerja",
+    "slug": "camerja",
+    "privacy": "public",
+    "sdkVersion": "28.0.0",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "primaryColor": "#cccccc",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "cover"
+    },
+    "ios": {
+      "supportsTablet": true
+    }
+  }
+}
