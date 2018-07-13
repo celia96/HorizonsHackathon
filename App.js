@@ -1,6 +1,7 @@
 import { Constants, Camera, FileSystem, Permissions } from 'expo';
 import React from 'react';
 import { createStackNavigator } from 'react-navigation'
+import axios from 'axios'
 import {
   Alert,
   StyleSheet,
@@ -10,6 +11,7 @@ import {
   Slider,
   Platform,
   Image,
+  TextInput,
   AsyncStorage,
   ListView,
   Button,
@@ -72,7 +74,10 @@ class Register extends React.Component {
   }
 
   register() {
-    fetch('http://6af82e56.ngrok.io/nickname', {
+    console.log("User: " + this.state.username);
+    var thisEnv = this;
+
+    fetch('http://bca7f82e.ngrok.io/nickname', {
       method: 'POST',
       headers: {
         "Content-Type": "application/json"
@@ -83,7 +88,11 @@ class Register extends React.Component {
     })
     .then((response) => response.json())
     .then((responseJson) => {
+      console.log("responseJson: " + responseJson);
       if (responseJson.success) {
+        console.log("Username: " + this.state.username);
+        console.log("responseJson: " + responseJson.id);
+        this.props.navigation.navigate('Players')
         AsyncStorage.setItem('user', JSON.stringify({
           id: responseJson.id,
           name:this.state.username
@@ -95,7 +104,7 @@ class Register extends React.Component {
     .catch((err) => {
       console.error(err);
     });
-    this.props.navigation.navigate('Players')
+
   }
 
   render() {
@@ -155,7 +164,7 @@ class Players extends React.Component {
   }
 
   componentDidMount() {
-    fetch('http://6af82e56.ngrok.io/users', {
+    fetch('http://bca7f82e.ngrok.io/users', {
       method: 'GET',
       headers: {
         "Content-Type": "application/json"
@@ -175,7 +184,7 @@ class Players extends React.Component {
   selectPlayer(rowData) {
     AsyncStorage.getItem('user')
   .then(result => {
-    fetch('https://c64c77ac.ngrok.io/gamestart', {
+    fetch('http://localhost:3000/gamestart', {
       method: 'POST',
       headers: {
         "Content-Type": "application/json"
@@ -194,7 +203,7 @@ class Players extends React.Component {
     .then((response) => response.json())
     .then((responseJson) => {
       if (responseJson.success) {
-        AsyncStoage.setItem('game', JSON.stringify(
+        AsyncStorage.setItem('game', JSON.stringify(
           responseJson.game
         ))
         this.props.navigation.navigate('GameScreen')
@@ -283,7 +292,7 @@ class CameraScreen extends React.Component {
           .then(game => {
             AsyncStorage.getItem('user')
               .then(user => {
-                fetch('https://c64c77ac.ngrok.io/decreaseLife', {
+                fetch('https://32369f6e.ngrok.io/decreaseLife', {
                   method: 'POST',
                   headers: {
                     "Content-Type": "application/json"

@@ -1,8 +1,15 @@
 const express = require('express/')
 const app = express()
+const bodyParser = require('body-parser')
 const mongoose = require('mongoose');
 mongoose.connect(process.env.MLAB);
 
+
+// parse application/x-www-form-urlencoded
+app.use(bodyParser.urlencoded({ extended: false }))
+
+// parse application/json
+app.use(bodyParser.json())
 
 
 const User = mongoose.model('User', {
@@ -17,7 +24,10 @@ const Game = mongoose.model('Game', {
 
 
 app.post('/nickname', (req,res)=> {
-  new User(req.body)
+  console.log(req.body);
+  new User({
+    name: req.body.name
+  })
     .save()
     .then((product) => res.json({success: true, id: product._id}))
     .catch((err) => {
@@ -48,6 +58,7 @@ app.post('/gamestart', (req,res) => {
   .catch((err) => {
     console.log(err)
     res.json({success:false})
+  })
 })
 
 app.post('/decreaseLife', (req,res) => {
