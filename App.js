@@ -1,5 +1,6 @@
 import { Constants, Camera, FileSystem, Permissions } from 'expo';
 import React from 'react';
+import { createStackNavigator } from 'react-navigation'
 import {
   Alert,
   StyleSheet,
@@ -8,7 +9,8 @@ import {
   TouchableOpacity,
   Slider,
   Platform,
-  Image
+  Image,
+  AsyncStorage
 } from 'react-native';
 import GalleryScreen from './GalleryScreen';
 import isIPhoneX from 'react-native-is-iphonex';
@@ -25,7 +27,7 @@ import {
 
 const landmarkSize = 2;
 
-export default class CameraScreen extends React.Component {
+class CameraScreen extends React.Component {
   state = {
     zoom: 0,
     type: 'back',
@@ -40,6 +42,7 @@ export default class CameraScreen extends React.Component {
     pictureSizes: [],
     pictureSizeId: 0,
     showGallery: false,
+    gameover: false
   };
 
   async componentWillMount() {
@@ -76,12 +79,50 @@ export default class CameraScreen extends React.Component {
         // fetch post
         // decreasing the heart of the other player
         console.log("There is a face!");
-
-
-      }
+        AsyncStorage.getItem('game')
+          .then(game => {
+            AsyncStorage.getItem('user')
+              .then(user => {
+                fetch('https://c64c77ac.ngrok.io/decreaseLife', {
+                  method: 'POST',
+                  headers: {
+                    "Content-Type": "application/json"
+                  },
+                  body: JSON.stringify({
+                    game: result,
+                    myId: user.id
+                  })
+                })
+                .then((response) => response.json())
+                .then((responseJson) => {
+                  if (responseJson.success) {
+                    if (responseJson.gameover) {
+                      this.setState({
+                        gameover: true
+                      })
+                    }
+                    Alert.alert(
+                      'Alert Title',
+                      'Alert Contents',
+                      [{text: "Shot on target!"}]
+                    )
+                  } else {
+                    Alert.alert(
+                      'Alert Title',
+                      'Alert Contents',
+                      [{text: "Fail"}]
+                    )
+                  }
+                })
+                .catch((err) => {
+                  /* do something if there was an error with fetching */
+                  console.log("Error: " + err);
+                });
+              })
+          })
+        }
       this.camera.takePictureAsync({ onPictureSaved: this.onPictureSaved });
     }
-
   };
 
   onPictureSaved = async photo => {
@@ -227,6 +268,21 @@ export default class CameraScreen extends React.Component {
   }
 }
 
+class GameOver extends React.Component {
+
+  render() {
+    return (
+      <View>
+        <Text>Game Over</Text>
+      </View>
+    )
+  }
+}
+
+const Navigator = createStackNavigator({
+  GameScreen: {screen: CameraScreen},
+})
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -359,3 +415,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
 });
+
+export default Navigator;
