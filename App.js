@@ -184,7 +184,7 @@ class Players extends React.Component {
   selectPlayer(rowData) {
     AsyncStorage.getItem('user')
   .then(result => {
-    fetch('http://localhost:3000/gamestart', {
+    fetch('http://bca7f82e.ngrok.io/gamestart', {
       method: 'POST',
       headers: {
         "Content-Type": "application/json"
@@ -292,7 +292,7 @@ class CameraScreen extends React.Component {
           .then(game => {
             AsyncStorage.getItem('user')
               .then(user => {
-                fetch('https://32369f6e.ngrok.io/decreaseLife', {
+                fetch('http://bca7f82e.ngrok.io/decreaseLife', {
                   method: 'POST',
                   headers: {
                     "Content-Type": "application/json"
