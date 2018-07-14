@@ -20,6 +20,7 @@ import GalleryScreen from './GalleryScreen';
 import isIPhoneX from 'react-native-is-iphonex';
 import heart from './assets/Hearts.png'
 
+
 import {
   Ionicons,
   MaterialIcons,
@@ -30,6 +31,7 @@ import {
 } from '@expo/vector-icons';
 
 const landmarkSize = 2;
+var url = 'http://b2e8f3cd.ngrok.io'
 
 
 class HomePage extends React.Component {
@@ -37,10 +39,11 @@ class HomePage extends React.Component {
     title: 'HomePage'
   };
 
+
   render () {
     return (
       <View style = {styles.homeContainer}>
-        <View style = {{fontSize: 40}}>
+        <View>
           <Text>Catch Me If You Can!</Text>
 
           <TouchableOpacity onPress={ () => (this.props.navigation.navigate('Register'))}>
@@ -54,6 +57,7 @@ class HomePage extends React.Component {
           <TouchableOpacity>
             <Text>Quit</Text>
           </TouchableOpacity>
+
 
         </View>
       </View>
@@ -77,7 +81,7 @@ class Register extends React.Component {
     console.log("User: " + this.state.username);
     var thisEnv = this;
 
-    fetch('http://bca7f82e.ngrok.io/nickname', {
+    fetch(url + '/nickname', {
       method: 'POST',
       headers: {
         "Content-Type": "application/json"
@@ -95,24 +99,24 @@ class Register extends React.Component {
         this.props.navigation.navigate('Players')
         AsyncStorage.setItem('user', JSON.stringify({
           id: responseJson.id,
-          name:this.state.username
+          name: this.state.username
         }))
       } else {
         alert('Nickname register failed')
       }
     })
     .catch((err) => {
-      console.error(err);
+      console.error("Error is?: " + err);
     });
 
   }
 
   render() {
     return (
-      <View style = {styles.container}>
+      <View style = {styles.homeContainer}>
 
         <TextInput
-          style={{height: 40}}
+          style={{height: 40, color: 'black'}}
           placeholder="Username"
           onChangeText={(text) => this.setState({username: text})}
         />
@@ -133,8 +137,8 @@ class Instructions extends React.Component {
 
   render() {
     return (
-      <View style = {styles.container}>
-        <View style = {{fontSize: 25}}>
+      <View style = {styles.homeContainer}>
+        <View>
           <Text>
             Use the camera button to detect and shoot at opponent's face.
             Each accurate shot will decrease opponent's lives by one.
@@ -164,7 +168,7 @@ class Players extends React.Component {
   }
 
   componentDidMount() {
-    fetch('http://bca7f82e.ngrok.io/users', {
+    fetch(url + '/users', {
       method: 'GET',
       headers: {
         "Content-Type": "application/json"
@@ -184,7 +188,7 @@ class Players extends React.Component {
   selectPlayer(rowData) {
     AsyncStorage.getItem('user')
   .then(result => {
-    fetch('http://bca7f82e.ngrok.io/gamestart', {
+    fetch('http://c0c17fb8.ngrok.io/gamestart', {
       method: 'POST',
       headers: {
         "Content-Type": "application/json"
@@ -220,9 +224,8 @@ class Players extends React.Component {
 
   render() {
     const ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
-
     return (
-      <View style={styles.container}>
+      <View style={styles.homeContainer}>
         <ListView
           dataSource={ds.cloneWithRows(this.state.arr)}
           renderRow={(rowData) =>
@@ -292,7 +295,7 @@ class CameraScreen extends React.Component {
           .then(game => {
             AsyncStorage.getItem('user')
               .then(user => {
-                fetch('http://bca7f82e.ngrok.io/decreaseLife', {
+                fetch(url + '/decreaseLife', {
                   method: 'POST',
                   headers: {
                     "Content-Type": "application/json"
@@ -307,7 +310,8 @@ class CameraScreen extends React.Component {
                   if (responseJson.success) {
                     if (responseJson.gameover) {
                       this.setState({
-                        gameover: true
+                        gameover: true,
+                        winner: responseJson.winner
                       })
                     }
                     Alert.alert(
@@ -468,26 +472,36 @@ class CameraScreen extends React.Component {
       </View>
     );
 
+  // renderGame = () => (
+  //   const cameraScreenContent = this.state.permissionsGranted
+  //     ? this.renderCamera()
+  //     : this.renderNoPermissions();
+  //   const content = this.state.showGallery ? this.renderGallery() : cameraScreenContent;
+  //   return <View style={styles.container}>{content}</View>;
+  // );
+
   render() {
     const cameraScreenContent = this.state.permissionsGranted
       ? this.renderCamera()
       : this.renderNoPermissions();
     const content = this.state.showGallery ? this.renderGallery() : cameraScreenContent;
     return <View style={styles.container}>{content}</View>;
+    // return (
+    //   {this.state.winner ? <GameOver winner={this.state.winner} /> : this.renderGame()}
+    // )
   }
 }
 
 class GameOver extends React.Component {
-
   render() {
     return (
-      <View>
-        <Text>Game Over</Text>
+      <View style={styles.container}>
+        <Text>Game over!</Text>
+        <Text>Winner: {this.props.winner}</Text>
       </View>
     )
   }
 }
-
 
 const Navigator = createStackNavigator({
   HomePage: {screen: HomePage},
@@ -644,12 +658,14 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginLeft: 5,
     marginRight: 5,
-    borderRadius: 5
+    borderRadius: 5,
+    backgroundColor: 'white'
   },
   buttonLabel: {
     textAlign: 'center',
     fontSize: 16,
-    color: 'white'
+    color: 'black',
+    backgroundColor: 'white'
   }
 });
 
