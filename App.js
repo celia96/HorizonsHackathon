@@ -38,24 +38,76 @@ class HomePage extends React.Component {
   static navigationOptions = {
     title: 'HomePage'
   };
-
-
+  // homeContainer: {
+  //   flex: 1,
+  //   marginTop: 20,
+  //   backgroundColor: 'white',
+  //   alignItems: 'center',
+  //   justifyContent: 'center',
+  // },
   render () {
     return (
-      <View style = {styles.homeContainer}>
+      <View style = {{flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: 'black'}}>
         <View>
-          <Text>Catch Me If You Can!</Text>
-
-          <TouchableOpacity onPress={ () => (this.props.navigation.navigate('Register'))}>
-            <Text>Start Game</Text>
+          <Text style={{color: 'white', fontSize: 40, fontWeight: 'bold'}}>Catch Me</Text>
+          <Text style={{color: 'white', fontSize: 40, fontWeight: 'bold'}}>If You Can</Text>
+          <TouchableOpacity
+            style={{
+              marginRight:10,
+              marginLeft:10,
+              marginTop:10,
+              paddingTop:20,
+              paddingBottom:20,
+              backgroundColor:'black',
+              borderRadius:10,
+              borderWidth: 1,
+              borderColor: '#fff'
+            }}
+            onPress={ () => (this.props.navigation.navigate('Register'))}>
+            <Text style={{
+              color:'#fff',
+              textAlign:'center',
+              fontWeight:'bold'
+            }}>Start Game</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={ () => (this.props.navigation.navigate('Instructions'))}>
-            <Text>Instructions</Text>
+          <TouchableOpacity
+            style={{
+              marginRight:10,
+              marginLeft:10,
+              marginTop:10,
+              paddingTop:20,
+              paddingBottom:20,
+              backgroundColor:'black',
+              borderRadius:10,
+              borderWidth: 1,
+              borderColor: '#fff'
+            }}
+            onPress={ () => (this.props.navigation.navigate('Instructions'))}>
+            <Text style={{
+              color:'#fff',
+              textAlign:'center',
+              fontWeight:'bold'
+            }}>Instructions</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity>
-            <Text>Quit</Text>
+          <TouchableOpacity
+            style={{
+              marginRight:10,
+              marginLeft:10,
+              marginTop:10,
+              paddingTop:20,
+              paddingBottom:20,
+              backgroundColor:'black',
+              borderRadius:10,
+              borderWidth: 1,
+              borderColor: '#fff'
+            }}>
+            <Text style={{
+              color:'#fff',
+              textAlign:'center',
+              fontWeight:'bold'
+            }}>Quit</Text>
           </TouchableOpacity>
 
 
