@@ -3,6 +3,11 @@ const app = express()
 const bodyParser = require('body-parser')
 const mongoose = require('mongoose');
 
+// var http = require('http')
+// var socketio = require('socket.io');
+// var server = http.Server(app);
+// var websocket = socketio(server);
+// server.listen(3000, () => console.log('listening on *:3000'));
 
 mongoose.connect(process.env.MLAB);
 
@@ -12,6 +17,19 @@ app.use(bodyParser.urlencoded({ extended: false }))
 // parse application/json
 app.use(bodyParser.json())
 
+// // Mapping objects to easily map sockets and users.
+// var clients = {};
+// var users = {};
+//
+// // This represents a unique chatroom.
+// // For this example purpose, there is only one chatroom;
+// var chatId = 1;
+//
+// websocket.on('connection', (socket) => {
+//     clients[socket.id] = socket;
+//     socket.on('userJoined', (userId) => onUserJoined(userId, socket));
+//     socket.on('message', (message) => onMessageReceived(message, socket));
+// });
 
 const User = mongoose.model('User', {
    name: String,
@@ -43,11 +61,17 @@ app.post('/getInvitation', (req,res) => {
   User.findById(req.body.id)
     .then((result) => {
       console.log("Invitation: ", result);
+      var inv = {};
       if (result.invitation) {
         var inv = result.invitation
-        User.findByIdAndUpdate
-        res.json({success:true, invitation:inv})
       }
+      return inv;
+    })
+    .then((inv) => {
+      User.findByIdAndUpdate(req.body.id, {invitation: {}})
+        .then(() => {
+          res.json({success:true, invitation:inv})
+        })
     })
 })
 
@@ -87,10 +111,8 @@ app.post('/gamestart', (req,res) => {
    }
  }).save()
  .then((product) => {gameID = product._id})
- .then(User.findByIdAndUpdate(req.body.player1.id, {inGame:true, gameId:gameID}), (player1) => {
-   User.findByIdAndUpdate(req.body.player2.id, {inGame:true, gameId:gameID})
-   console.log(player1);
- })
+ .then(() => User.findByIdAndUpdate(req.body.player1.id, {inGame:true, gameId:gameID}))
+ .then(() => User.findByIdAndUpdate(req.body.player2.id, {inGame:true, gameId:gameID}))
  // .then(User.findByIdAndUpdate(req.body.player2.id, {inGame:true, gameId:gameID}))
  .catch((err) => {
    console.log(err)

@@ -19,7 +19,7 @@ import {
 import GalleryScreen from './GalleryScreen';
 import isIPhoneX from 'react-native-is-iphonex';
 import heart from './assets/Hearts.png'
-
+// import SocketIOClient from 'socket.io-client';
 
 import {
   Ionicons,
@@ -31,7 +31,7 @@ import {
 } from '@expo/vector-icons';
 
 const landmarkSize = 2;
-var url = 'http://19fa9ee7.ngrok.io'
+var url = 'http://ca23ba06.ngrok.io'
 
 class HomePage extends React.Component {
   static navigationOptions = {
@@ -244,6 +244,8 @@ class Players extends React.Component {
       myName:'',
       runInterval: true
     }
+    // this.socket = SocketIOClient(url);
+    // this.socket.on('message', this.onReceivedMessage); // get invitation
   }
 
   deleteInvitation(id) {
@@ -291,17 +293,11 @@ class Players extends React.Component {
       // console.log("ResponseJson: " + responseJson);
       if (responseJson.success) {
         // console.log("My id: " + this.state.myID);
-        thisEnv.setState({
-          runInterval: false
-        })
         Alert.alert(
           'Game Invitation',
           `${responseJson.invitation.name} wants to play a game with you!`,
           [
            {text: 'Decline', onPress: () => {
-             thisEnv.setState({
-               runInterval: true
-             })
              thisEnv.deleteInvitation(thisEnv.state.myID)
            }},
            {text: 'Accept', onPress: () => thisEnv.gameplay(thisEnv.state.myName,thisEnv.state.myID,responseJson.invitation.name,responseJson.invitation.id)},
@@ -368,7 +364,8 @@ class Players extends React.Component {
     .catch((err) => {
       console.error(err)})
 
-    this.runInterval();
+    setInterval(() => this.getInvitation(), 5000)
+    setInterval(() => this.checkInGame(this.state.myID), 500)
   }
 
   componentWillUnmount () {
@@ -376,21 +373,6 @@ class Players extends React.Component {
     clearInterval(checkin);
   }
 
-  runInterval () {
-    var invite;
-    var checkin;
-
-    setInterval(() => {
-      if (this.state.runInterval) {
-        invite = setInterval(() => this.getInvitation(), 5000)
-        console.log("Inivte", invite);
-        checkin = setInterval(() => this.checkInGame(this.state.myID), 500)
-      } else {
-        console.log("Clear invite interval");
-        clearInterval(invite);
-      }
-    }, 500)
-  }
   selectPlayer(rowData) {
     // console.log("STate: ", this.state);
     console.log('inside selectplayer'+ "Me: " + this.state.myName + this.state.myID)
