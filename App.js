@@ -518,20 +518,10 @@ class CameraScreen extends React.Component {
     );
   }
 
-  renderFaces = () => {
-    // if (this.state.faces) {
-    //   this.setState({
-    //     faceFound: true
-    //   })
-    // } else {
-    //   this.setState({
-    //     faceFound: false
-    //   })
-    // }
+  renderFaces = () =>
     <View style={styles.facesContainer} pointerEvents="none">
       {this.state.faces.map(this.renderFace)}
     </View>
-  }
 
 
   renderNoPermissions = () =>
@@ -610,15 +600,14 @@ class GameOver extends React.Component {
 
   render() {
     return (
-      <View style={{backgroundColor: "black", flex: 1}}>
+      <View style={{backgroundColor: 'black', flex: 1, alignItems: 'center', justifyContent: 'center'}}>
         <Text style={{
-          textAlign: 'center',
-          fontSize: 20,
-          color: 'white'
+          color: 'white', fontSize: 40, fontWeight: 'bold'
         }}>Game over!</Text>
         <Text style={{
           textAlign: 'center',
           fontSize: 20,
+          fontWeight: 'bold',
           color: 'white'
         }}>Winner: {this.props.winner}</Text>
       </View>
