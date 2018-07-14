@@ -19,7 +19,7 @@ import {
 import GalleryScreen from './GalleryScreen';
 import isIPhoneX from 'react-native-is-iphonex';
 import heart from './assets/Hearts.png'
-// import SocketIOClient from 'socket.io-client';
+import SocketIOClient from 'socket.io-client';
 
 import {
   Ionicons,
@@ -31,7 +31,13 @@ import {
 } from '@expo/vector-icons';
 
 const landmarkSize = 2;
-var url = 'http://ca23ba06.ngrok.io'
+var url = 'http://293be24b.ngrok.io'
+
+const user = {};
+const game = {};
+const myObj = {};
+
+const socket = SocketIOClient(url);
 
 class HomePage extends React.Component {
   static navigationOptions = {
@@ -126,35 +132,23 @@ class Register extends React.Component {
     this.state = {
       username: ''
     }
+    //this.socket = SocketIOClient(url);
   }
 
   register() {
     var thisEnv = this;
+    console.log("Register");
+    socket.emit('userJoined', thisEnv.state.username);
+    socket.on('userCreated', (id) => {
+      user.id = id;
+      user.name = thisEnv.state.username;
+      this.props.navigation.navigate('Players')
 
-    fetch(url + '/nickname', {
-      method: 'POST',
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        name: thisEnv.state.username,
-      })
+      // AsyncStorage.setItem('user', JSON.stringify({
+      //   id: id,
+      //   name: thisEnv.state.username
+      // }));
     })
-    .then((response) => response.json())
-    .then((responseJson) => {
-      if (responseJson.success) {
-        AsyncStorage.setItem('user', JSON.stringify({
-          id: responseJson.id,
-          name: thisEnv.state.username
-        }))
-          .then(() => thisEnv.props.navigation.navigate('Players'))
-      } else {
-        alert('Nickname register failed')
-      }
-    })
-    .catch((err) => {
-      console.error("Error is?: " + err);
-    });
 
   }
 
@@ -244,177 +238,65 @@ class Players extends React.Component {
       myName:'',
       runInterval: true
     }
-    // this.socket = SocketIOClient(url);
     // this.socket.on('message', this.onReceivedMessage); // get invitation
   }
 
-  deleteInvitation(id) {
-    fetch(url+ '/deleteInvitation', {
-      method: 'POST',
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({id:id})
-    }).catch(err=>console.log(err))
-  }
-
-  gameplay(name1,id1,name2,id2) {
-    console.log("Game playing");
-    fetch(url+ '/gamestart', {
-      method: 'POST',
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        player1: {
-          name: name1,
-          id: id1
-        },
-        player2: {
-          name: name2,
-          id: id2
-        }
-      })
-    }).catch(err=>{console.log(err)})
-  }
-
-  getInvitation() {
-    // console.log(this.state.myID)
-    var thisEnv = this;
-    fetch(url + '/getInvitation', {
-      method: 'POST',
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({id:this.state.myID})
-    })
-    .then((response) => response.json())
-    .then((responseJson) => {
-      // console.log("ResponseJson: " + responseJson);
-      if (responseJson.success) {
-        // console.log("My id: " + this.state.myID);
-        Alert.alert(
-          'Game Invitation',
-          `${responseJson.invitation.name} wants to play a game with you!`,
-          [
-           {text: 'Decline', onPress: () => {
-             thisEnv.deleteInvitation(thisEnv.state.myID)
-           }},
-           {text: 'Accept', onPress: () => thisEnv.gameplay(thisEnv.state.myName,thisEnv.state.myID,responseJson.invitation.name,responseJson.invitation.id)},
-          ],
-          { cancelable: false }
-          )
-      }
-    })
-    .catch((err) => {
-      console.error("Error is: " + err);
-    });
-  }
-
-  checkInGame(id) {
-    var thisEnv = this;
-    fetch(url+ '/checkingame', {
-      method: 'POST',
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({id:thisEnv.state.myID})
-    })
-    .then((response) => response.json())
-    .then((responseJson) => {
-      if (responseJson.game.inGame) {
-         AsyncStorage.setItem('game', JSON.stringify(
-           responseJson.game.gameId
-         ))
-          .then(() => thisEnv.props.navigation.navigate('GameScreen'))
-       }
-    })
-    .catch(err=>console.log(err))
+  gameplay(me, myid, opp, oppid) {
+    var obj = {
+      me: me,
+      myid: myid,
+      opp: opp,
+      oppid: oppid
+    }
+    socket.emit('game', obj);
   }
 
   componentDidMount() {
     var thisEnv = this;
-
-    AsyncStorage.getItem('user')
-    .then(result => {
-      console.log("result: ", result);
+    socket.emit('playerList')
+    socket.on('invited', (obj) => {
+      Alert.alert(
+        'Game Invitation',
+        `${obj.name} wants to play a game with you!`,
+        [
+         {text: 'Accept', onPress: () => thisEnv.gameplay(thisEnv.state.myName,thisEnv.state.myID,obj.name,obj.id)},
+        ],
+        { cancelable: false }
+      )
+    })
+    socket.on('players', (arr) => {
       thisEnv.setState({
-        myID: JSON.parse(result).id,
-        myName: JSON.parse(result).name
+        myID: user.id,
+        myName: user.name
       })
+      thisEnv.setState({
+        arr: arr
+      })
+
 
     })
-    .then(
-      fetch(url + '/users', {
-        method: 'GET',
-        headers: {
-          "Content-Type": "application/json"
-        },
-      })
-      .then((response) => response.json())
-      .then((responseJson) => {
-        thisEnv.setState ({
-          arr: responseJson
-        })
-      })
-      .catch((err) => {
-        console.error(err);
-      })
-    )
-    .catch((err) => {
-      console.error(err)})
+    socket.on('gameplay', (g) => {
+      game.id = g._id;
+      game.player1 = g.player1;
+      game.player2 = g.player2;
+      console.log("GAME: ", game);
+      this.props.navigation.navigate('GameScreen')
 
-    setInterval(() => this.getInvitation(), 5000)
-    setInterval(() => this.checkInGame(this.state.myID), 500)
+    })
   }
 
-  componentWillUnmount () {
-    clearInterval(invite);
-    clearInterval(checkin);
-  }
-
-  selectPlayer(rowData) {
-    // console.log("STate: ", this.state);
-    console.log('inside selectplayer'+ "Me: " + this.state.myName + this.state.myID)
-    console.log('inside selectplayer'+ "Other: " + rowData.name + rowData._id)
-    var thisEnv = this;
-    fetch(url+'/giveInvitation', {
-      method:'POST',
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        player1: {
-           name: thisEnv.state.myName,
-           id: thisEnv.state.myID
-         },
-         player2: {
-           name: rowData.name,
-           id: rowData._id
-         }
-      })
-    })
-    .then((response) => {
-      console.log('hi');
-      return response.json()
-    })
-    .then((responseJson) => {
-      console.log(JSON.stringify(responseJson));
-      console.log("Sending Invitation: " + responseJson);
-      if (responseJson.success) {
-        alert('Invitation sent!')
-      } else {
-        alert('Invitation send fail')
-      }
-    })
-    .catch((err) => {
-      console.error(err);
-    });
+  sendInvitation(rowData) {
+    var obj = {
+      id: this.state.myID,
+      name: this.state.myName,
+      opp: rowData._id,
+    }
+    socket.emit('invite', obj);
   }
 
   render() {
     const ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
-    console.log("render", this.state);
+    // console.log("render", this.state);
     return (
       <View style={styles.homeContainer}>
         <ListView
@@ -430,7 +312,8 @@ class Players extends React.Component {
               borderWidth: 1,
               margin:5
             }}
-              onPress={this.selectPlayer.bind(this, rowData)}>
+              onPress={() => this.sendInvitation(rowData)}
+              >
               <Text>{rowData.name}</Text>
             </TouchableOpacity>
           }
@@ -441,22 +324,30 @@ class Players extends React.Component {
 }
 
 class CameraScreen extends React.Component {
-  state = {
-    zoom: 0,
-    type: 'back',
-    ratio: '16:9',
-    ratios: [],
-    faceDetecting: true,
-    faces: [],
-    lives: 5,
-    newPhotos: false,
-    permissionsGranted: false,
-    pictureSize: undefined,
-    pictureSizes: [],
-    pictureSizeId: 0,
-    showGallery: false,
-    gameover: false
-  };
+  constructor() {
+    super();
+    this.state = {
+      zoom: 0,
+      type: 'back',
+      ratio: '16:9',
+      ratios: [],
+      faceDetecting: true,
+      faces: [],
+      newPhotos: false,
+      permissionsGranted: false,
+      pictureSize: undefined,
+      pictureSizes: [],
+      pictureSizeId: 0,
+      showGallery: false,
+      gameover: false,
+      player1: {},
+      player2: {},
+      gameid: '',
+      myID: '',
+      winner: ''
+    };
+    // this.socket = SocketIOClient(url);
+  }
 
   async componentWillMount() {
     const { status } = await Permissions.askAsync(Permissions.CAMERA);
@@ -467,6 +358,21 @@ class CameraScreen extends React.Component {
     FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + 'photos').catch(e => {
       console.log(e, 'Directory exists');
     });
+
+    console.log("game", game);
+    console.log("user", user);
+    // myObj.player1 = result.player1
+    // myObj.player2 = result.player2
+    // myObj.gameid = result.id
+    // myObj.myID = result2.id
+    // console.log("3", myOsbj);
+    this.setState({
+      gameid: game.id,
+      player1: game.player1,
+      player2: game.player2,
+      myID: user.id
+    })
+
   }
 
   getRatios = async () => {
@@ -486,55 +392,57 @@ class CameraScreen extends React.Component {
 
   takePicture = () => {
     if (this.camera) {
-      cnosole.log("Shoot!")
+      console.log("Shoot!")
       // If the picture contains the face
       if (this.state.faces) {
         // fetch post
         // decreasing the heart of the other player
         console.log("There is a face!");
-        AsyncStorage.getItem('game')
-          .then(game => {
-            AsyncStorage.getItem('user')
-              .then(user => {
-                fetch(url + '/decreaseLife', {
-                  method: 'POST',
-                  headers: {
-                    "Content-Type": "application/json"
-                  },
-                  body: JSON.stringify({
-                    game: JSON.parse(game),
-                    myId: JSON.parse(user).id
-                  })
-                })
-                .then((response) => response.json())
-                .then((responseJson) => {
-                  if (responseJson.success) {
-                    if (responseJson.gameover) {
-                      this.setState({
-                        gameover: true,
-                        winner: responseJson.winner
-                      })
-                    }
-                    Alert.alert(
-                      'Alert Title',
-                      'Alert Contents',
-                      [{text: "Shot on target!"}]
-                    )
-                  } else {
-                    Alert.alert(
-                      'Alert Title',
-                      'Alert Contents',
-                      [{text: "Fail"}]
-                    )
-                  }
-                })
-                .catch((err) => {
-                  /* do something if there was an error with fetching */
-                  console.log("Error: " + err);
-                });
-              })
-          })
+
+        var obj = {
+          game: this.state.gameid,
+          myId: this.state.myID
         }
+        //
+        // if (this.state.player1.id !== this.state.myID) {
+        //   var life = this.state.player1.life - 1
+        //   if (life === 0) {
+        //     this.setState({
+        //       gameover: true,
+        //       winner: this.state.player2.name
+        //     })
+        //   }
+        //   this.setState({
+        //     player1: {
+        //       life: life
+        //     }
+        //   })
+        // } else {
+        //   var life = this.state.player2.life - 1
+        //   if (life === 0) {
+        //     this.setState({
+        //       gameover: true,
+        //       winner: this.state.player1.name
+        //     })
+        //   }
+        //   this.setState({
+        //     player2: {
+        //       life: life
+        //     }
+        //   })
+        // }
+        Alert.alert(
+          'Shot',
+          `You just shot the opponent!`,
+          [
+           {text: 'Ok', onPress: () => this.setState({winner: user.name, gameover: true})},
+          ],
+          { cancelable: false }
+          )
+
+      } else {
+        console.log("No faces");
+      }
       this.camera.takePictureAsync({ onPictureSaved: this.onPictureSaved });
     }
   };
@@ -547,7 +455,10 @@ class CameraScreen extends React.Component {
     this.setState({ newPhotos: true });
   }
 
-  onFacesDetected = ({ faces }) => this.setState({ faces });
+  onFacesDetected = ({ faces }) => {
+    this.setState({ faces })
+  }
+
   onFaceDetectionError = state => console.warn('Faces detection error:', state);
 
   collectPictureSizes = async () => {
@@ -583,6 +494,7 @@ class CameraScreen extends React.Component {
   }
 
   renderFace({ bounds, faceID, rollAngle, yawAngle }) {
+
     return (
       <View
         key={faceID}
@@ -606,10 +518,21 @@ class CameraScreen extends React.Component {
     );
   }
 
-  renderFaces = () =>
+  renderFaces = () => {
+    // if (this.state.faces) {
+    //   this.setState({
+    //     faceFound: true
+    //   })
+    // } else {
+    //   this.setState({
+    //     faceFound: false
+    //   })
+    // }
     <View style={styles.facesContainer} pointerEvents="none">
       {this.state.faces.map(this.renderFace)}
     </View>
+  }
+
 
   renderNoPermissions = () =>
     <View style={styles.noPermissions}>
@@ -618,16 +541,13 @@ class CameraScreen extends React.Component {
       </Text>
     </View>
 
-  renderTopBar = () =>
-    //console.log("Heart!" + lives)
-    <View
-      style={styles.topBar}>
-      <Entypo name="heart" size={50} color="white" />
-      <Entypo name="heart" size={50} color="white" />
-      <Entypo name="heart" size={50} color="white" />
-      <Entypo name="heart" size={50} color="white" />
-      <Entypo name="heart" size={50} color="white" />
-    </View>
+  renderTopBar = () => {
+
+    return (<View
+              style={styles.topBar}>
+              <Entypo name="heart" size={50} color="white" />
+            </View>)
+  }
 
   renderBottomBar = () =>
     <View
@@ -636,7 +556,7 @@ class CameraScreen extends React.Component {
       </View>
       <View style={{ flex: 0.4 }}>
         <TouchableOpacity
-          onPress={this.takePicture}
+          onPress={this.takePicture.bind(this)}
           style={{ alignSelf: 'center' }}
         >
           <Ionicons name="ios-radio-button-on" size={70} color="white" />
@@ -652,6 +572,8 @@ class CameraScreen extends React.Component {
 
   renderCamera = () =>
     (
+      this.state.winner ? <GameOver winner={this.state.winner} /> :
+
       <View style={{ flex: 1 }}>
         <Camera
           ref={ref => {
@@ -671,15 +593,8 @@ class CameraScreen extends React.Component {
         </Camera>
         {this.state.faceDetecting && this.renderFaces()}
       </View>
-    );
 
-  // renderGame = () => (
-  //   const cameraScreenContent = this.state.permissionsGranted
-  //     ? this.renderCamera()
-  //     : this.renderNoPermissions();
-  //   const content = this.state.showGallery ? this.renderGallery() : cameraScreenContent;
-  //   return <View style={styles.container}>{content}</View>;
-  // );
+    );
 
   render() {
     const cameraScreenContent = this.state.permissionsGranted
@@ -687,18 +602,25 @@ class CameraScreen extends React.Component {
       : this.renderNoPermissions();
     const content = this.state.showGallery ? this.renderGallery() : cameraScreenContent;
     return <View style={styles.container}>{content}</View>;
-    // return (
-    //   {this.state.winner ? <GameOver winner={this.state.winner} /> : this.renderGame()}
-    // )
+
   }
 }
 
 class GameOver extends React.Component {
+
   render() {
     return (
-      <View style={styles.container}>
-        <Text>Game over!</Text>
-        <Text>Winner: {this.props.winner}</Text>
+      <View style={{backgroundColor: "black", flex: 1}}>
+        <Text style={{
+          textAlign: 'center',
+          fontSize: 20,
+          color: 'white'
+        }}>Game over!</Text>
+        <Text style={{
+          textAlign: 'center',
+          fontSize: 20,
+          color: 'white'
+        }}>Winner: {this.props.winner}</Text>
       </View>
     )
   }
