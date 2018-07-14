@@ -14,9 +14,10 @@ app.use(bodyParser.json())
 
 
 const User = mongoose.model('User', {
- name: String,
- game: {inGame:false,gameID:''},
- invitation: {}
+   name: String,
+   inGame: Boolean,
+   gameId: String,
+   invitation: Object
 })
 
 const Game = mongoose.model('Game', {
@@ -39,18 +40,24 @@ app.post('/giveInvitation', (req,res) => {
 
 app.post('/getInvitation', (req,res) => {
   console.log("Getting Invitation", 'myID'+ req.body.id);
-  User.findById(req.body.id, (result) => {
-    console.log(result);
-    if (result) {
-      res.json({success:true, invitation:result.invitation})
-    }
-  })
+  User.findById(req.body.id)
+    .then((result) => {
+      console.log("Invitation: ", result);
+      if (result.invitation) {
+        var inv = result.invitation
+        User.findByIdAndUpdate
+        res.json({success:true, invitation:inv})
+      }
+    })
 })
 
 app.post('/nickname', (req,res)=> {
  console.log(req.body);
  new User({
-   name: req.body.name
+   name: req.body.name,
+   invitation: {},
+   inGame:false,
+   gameId: ''
  })
    .save()
    .then((product) => res.json({success: true, id: product._id}))
@@ -80,8 +87,11 @@ app.post('/gamestart', (req,res) => {
    }
  }).save()
  .then((product) => {gameID = product._id})
- .then(User.findByIdAndUpdate(req.body.player1.id, {game:{inGame:true, gameId:gameID}}))
- .then(User.findByIdAndUpdate(req.body.player2.id, {game:{inGame:true, gameId:gameID}}))
+ .then(User.findByIdAndUpdate(req.body.player1.id, {inGame:true, gameId:gameID}), (player1) => {
+   User.findByIdAndUpdate(req.body.player2.id, {inGame:true, gameId:gameID})
+   console.log(player1);
+ })
+ // .then(User.findByIdAndUpdate(req.body.player2.id, {inGame:true, gameId:gameID}))
  .catch((err) => {
    console.log(err)
    res.json({success:false})
@@ -89,6 +99,7 @@ app.post('/gamestart', (req,res) => {
 })
 
 app.post('/checkingame', (req,res)=> {
+  console.log('checking');
     User.findById(req.body.id)
       .then((result)=> {
         res.json({game:result.game})
