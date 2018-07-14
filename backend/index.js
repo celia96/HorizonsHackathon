@@ -31,14 +31,16 @@ app.post('/deleteInvitation', (req,res)=> {
 })
 
 app.post('/giveInvitation', (req,res) => {
+  console.log('giving invitation')
   User.findByIdAndUpdate(req.body.player2.id, {invitation:req.body.player1})
     .then(res.json({success:true}))
     .catch(err=>res.json({success:false}))
 })
 
 app.post('/getInvitation', (req,res) => {
+  console.log("Getting Invitation", 'myID'+ req.body.id);
   User.findById(req.body.id, (result) => {
-    console.log("REsult " + result);
+    console.log(result);
     if (result) {
       res.json({success:true, invitation:result.invitation})
     }

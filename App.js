@@ -31,8 +31,7 @@ import {
 } from '@expo/vector-icons';
 
 const landmarkSize = 2;
-var url = 'http://2a10aca2.ngrok.io'
-
+var url = 'http://b7656af8.ngrok.io'
 
 class HomePage extends React.Component {
   static navigationOptions = {
@@ -130,7 +129,6 @@ class Register extends React.Component {
   }
 
   register() {
-    console.log("User: " + this.state.username);
     var thisEnv = this;
 
     fetch(url + '/nickname', {
@@ -144,11 +142,7 @@ class Register extends React.Component {
     })
     .then((response) => response.json())
     .then((responseJson) => {
-      console.log("responseJson: " + responseJson);
       if (responseJson.success) {
-        console.log("Username: " + this.state.username);
-        console.log("responseJson: " + responseJson.id);
-
         AsyncStorage.setItem('user', JSON.stringify({
           id: responseJson.id,
           name: this.state.username
@@ -257,7 +251,7 @@ class Players extends React.Component {
       headers: {
         "Content-Type": "application/json"
       },
-      body: {id:id}
+      body: JSON.stringify({id:id})
     }).catch(err=>console.log(err))
   }
 
@@ -281,7 +275,7 @@ class Players extends React.Component {
   }
 
   getInvitation() {
-    console.log(this.state)
+    // console.log(this.state.myID)
     fetch(url + '/getInvitation', {
       method: 'POST',
       headers: {
@@ -291,9 +285,9 @@ class Players extends React.Component {
     })
     .then((response) => response.json())
     .then((responseJson) => {
-      console.log('pass' + JSON.stringify(responseJson))
+      console.log("ResponseJson: " + responseJson);
       if (responseJson.success) {
-        console.log("My ID: " + this.state.myID);
+        console.log("My id: " + this.state.myID);
         Alert.alert(
           'Game Invitation',
           `${responseJson.invitation.name} wants to play a game with you!`,
@@ -316,7 +310,7 @@ class Players extends React.Component {
       headers: {
         "Content-Type": "application/json"
       },
-      body: {id:this.state.myID}
+      body: JSON.stringify({id:this.state.myID})
     })
     .then((response) => response.json())
     .then((responseJson) => {
@@ -324,19 +318,22 @@ class Players extends React.Component {
          AsyncStorage.setItem('game', JSON.stringify(
            responseJson.game.gameId
          ))
-         this.props.navigation.navigate('GameScreen')
+          .then(() => this.props.navigation.navigate('GameScreen'))
        }
     })
     .catch(err=>console.log(err))
   }
 
   componentDidMount() {
+    var thisEnv = this;
     AsyncStorage.getItem('user')
     .then(result => {
-      this.setState({
-        myID:result.id,
-        myName:result.id
-      })
+      console.log("result: ", result);
+      thisEnv.setState({
+        myID: result.id,
+        myName: result.name
+      }, () => console.log("componentDidMount ", thisEnv.state))
+
     })
     .then(
       fetch(url + '/users', {
@@ -347,11 +344,11 @@ class Players extends React.Component {
       })
       .then((response) => response.json())
       .then((responseJson) => {
-        this.setState ({
+        thisEnv.setState ({
           arr: responseJson
         })
-        setInterval(() => this.getInvitation(),10000)
-        setInterval(() => this.checkInGame(this.state.myID),10000)
+        setInterval(() => thisEnv.getInvitation(), 1000)
+        setInterval(() => thisEnv.checkInGame(thisEnv.state.myID), 1000)
       })
       .catch((err) => {
         console.error(err);
@@ -362,6 +359,10 @@ class Players extends React.Component {
   }
 
   selectPlayer(rowData) {
+    console.log("STate: ", this.state);
+    console.log('inside selectplayer'+ "Me: " + this.state.myName + this.state.myID)
+    console.log('inside selectplayer'+ "Other: " + rowData.name + rowData._id)
+
     fetch(url+'/giveInvitation', {
       method:'POST',
       headers: {
@@ -380,6 +381,7 @@ class Players extends React.Component {
     })
     .then((response) => response.json())
     .then((responseJson) => {
+      console.log("Sending Invitation: " + responseJson);
       if (responseJson.success) {
         alert('Invitation sent!')
       } else {
@@ -393,12 +395,13 @@ class Players extends React.Component {
 
   render() {
     const ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
+    console.log("render", this.state);
     return (
       <View style={styles.homeContainer}>
         <ListView
           dataSource={ds.cloneWithRows(this.state.arr)}
           renderRow={(rowData) =>
-            <TouchableOpacity onPress={() => this.selectPlayer(rowData)}>
+            <TouchableOpacity onPress={this.selectPlayer.bind(this, rowData)}>
               <Text>{rowData.name}</Text>
             </TouchableOpacity>
           }
