@@ -166,16 +166,50 @@ class Register extends React.Component {
 
   render() {
     return (
-      <View style = {styles.homeContainer}>
+      <View style = {{flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: 'black'}}>
 
         <TextInput
-          style={{height: 40, color: 'black'}}
+          style={{
+            alignSelf: 'stretch',
+            paddingTop: 10,
+            paddingBottom: 10,
+            paddingLeft: 10,
+            paddingRight: 10,
+            marginTop: 10,
+            marginLeft: 5,
+            marginRight: 5,
+            borderRadius: 5,
+            textAlign: 'center',
+            fontSize: 20,
+            color: 'white',
+            borderColor: 'white',
+            borderWidth: 1,
+          }}
           placeholder="Username"
           onChangeText={(text) => this.setState({username: text})}
         />
 
-        <TouchableOpacity style={[styles.button]} onPress={ () => {this.register()}}>
-          <Text style={styles.buttonLabel}>Enter</Text>
+        <TouchableOpacity
+          style = {{
+          alignSelf: 'stretch',
+          paddingTop: 10,
+          paddingBottom: 10,
+          paddingLeft: 10,
+          paddingRight: 10,
+          marginTop: 10,
+          marginLeft: 5,
+          marginRight: 5,
+          borderRadius: 5,
+          borderColor: '#fff',
+          borderWidth: 1,
+        }}
+          onPress={ () => {this.register()}}>
+
+          <Text style = {{
+            textAlign: 'center',
+            fontSize: 20,
+            color: 'white'
+        }}>Enter</Text>
         </TouchableOpacity>
 
       </View>
@@ -192,16 +226,11 @@ class Instructions extends React.Component {
     return (
       <View style = {styles.homeContainer}>
         <View>
-          <Text>
+          <Text style={{color: 'white', fontSize: 16, padding: 20}}>
             Use the camera button to detect and shoot at opponent's face.
             Each accurate shot will decrease opponent's lives by one.
-            Game ends when a player has no lives left.
+            Players start with 5 lives; game ends when a player has no lives left.
           </Text>
-
-          <TouchableOpacity style={[styles.button]} onPress={ () => (this.props.navigation.navigate('HomePage'))}>
-            <Text style={styles.buttonLabel}>Back</Text>
-          </TouchableOpacity>
-
         </View>
       </View>
     )
@@ -789,23 +818,6 @@ const styles = StyleSheet.create({
   },
   row: {
     flexDirection: 'row',
-  },
-
-  button: {
-    alignSelf: 'stretch',
-    paddingTop: 10,
-    paddingBottom: 10,
-    marginTop: 10,
-    marginLeft: 5,
-    marginRight: 5,
-    borderRadius: 5,
-    backgroundColor: 'white'
-  },
-  buttonLabel: {
-    textAlign: 'center',
-    fontSize: 16,
-    color: 'black',
-    backgroundColor: 'white'
   }
 });
 
