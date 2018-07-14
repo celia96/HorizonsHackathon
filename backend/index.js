@@ -14,7 +14,9 @@ app.use(bodyParser.json())
 
 
 const User = mongoose.model('User', {
- name: String
+ name: String,
+ game: {inGame:false,gameID:''},
+ invitation: {}
 })
 
 const Game = mongoose.model('Game', {
@@ -22,6 +24,26 @@ const Game = mongoose.model('Game', {
  player2: Object
 })
 
+app.post('/deleteInvitation', (req,res)=> {
+  User.findByIdAndUpdate(req.body.id, {invitation:{}})
+    .then(res.json({success:true}))
+    .catch(err=>res.json({success:false}))
+})
+
+app.post('/giveInvitation', (req,res) => {
+  User.findByIdAndUpdate(req.body.player2.id, {invitation:req.body.player1})
+    .then(res.json({success:true}))
+    .catch(err=>res.json({success:false}))
+})
+
+app.post('/getInvitation', (req,res) => {
+  User.findById(req.body.id, (result) => {
+    console.log("REsult " + result);
+    if (result) {
+      res.json({success:true, invitation:result.invitation})
+    }
+  })
+})
 
 app.post('/nickname', (req,res)=> {
  console.log(req.body);
@@ -42,6 +64,7 @@ app.get('/users', (req,res) => {
 })
 
 app.post('/gamestart', (req,res) => {
+ var gameID = '';
  new Game({
    player1: {
      name: req.body.player1.name,
@@ -54,12 +77,22 @@ app.post('/gamestart', (req,res) => {
      life: 5
    }
  }).save()
- .then((product) => res.json({success: true, game: product._id}))
+ .then((product) => {gameID = product._id})
+ .then(User.findByIdAndUpdate(req.body.player1.id, {game:{inGame:true, gameId:gameID}}))
+ .then(User.findByIdAndUpdate(req.body.player2.id, {game:{inGame:true, gameId:gameID}}))
  .catch((err) => {
    console.log(err)
    res.json({success:false})
  })
 })
+
+app.post('/checkingame', (req,res)=> {
+    User.findById(req.body.id)
+      .then((result)=> {
+        res.json({game:result.game})
+      })
+      .catch(err=>console.log(err))
+  })
 
 app.post('/decreaseLife', (req,res) => {
  Game.findById(req.body.game, (err,obj) => {
@@ -72,7 +105,7 @@ app.post('/decreaseLife', (req,res) => {
        winner = obj.item.name
      }
    }
-   Game.findByIdAndUpdate(req.game, obj, (err2) => {
+   Game.findByIdAndUpdate(req.body.game, obj, (err2) => {
      if (err2) {
        console.log(err2)
        res.json({success: false})

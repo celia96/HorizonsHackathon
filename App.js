@@ -31,7 +31,7 @@ import {
 } from '@expo/vector-icons';
 
 const landmarkSize = 2;
-var url = 'http://b2e8f3cd.ngrok.io'
+var url = 'http://2a10aca2.ngrok.io'
 
 
 class HomePage extends React.Component {
@@ -148,11 +148,12 @@ class Register extends React.Component {
       if (responseJson.success) {
         console.log("Username: " + this.state.username);
         console.log("responseJson: " + responseJson.id);
-        this.props.navigation.navigate('Players')
+
         AsyncStorage.setItem('user', JSON.stringify({
           id: responseJson.id,
           name: this.state.username
         }))
+          .then(() => this.props.navigation.navigate('Players'))
       } else {
         alert('Nickname register failed')
       }
@@ -215,63 +216,150 @@ class Players extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      arr: []
+      arr: [],
+      myID:'',
+      myName:''
     }
   }
 
-  componentDidMount() {
-    fetch(url + '/users', {
-      method: 'GET',
+  deleteInvitation(id) {
+    fetch(url+ '/deleteInvitation', {
+      method: 'POST',
       headers: {
         "Content-Type": "application/json"
       },
-    })
-    .then((response) => response.json())
-    .then((responseJson) => {
-      this.setState ({
-        arr: responseJson
-      })
-    })
-    .catch((err) => {
-      console.error(err);
-    });
+      body: {id:id}
+    }).catch(err=>console.log(err))
   }
 
-  selectPlayer(rowData) {
-    AsyncStorage.getItem('user')
-  .then(result => {
-    fetch('http://c0c17fb8.ngrok.io/gamestart', {
+  gameplay(name1,id1,name2,id2) {
+    fetch(url+ '/gamestart', {
       method: 'POST',
       headers: {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-      player1: {
-        name: result.name,
-        id: result.id
+        player1: {
+          name: name1,
+          id: id1
+        },
+        player2: {
+          name: name2,
+          id: id2
+        }
+      })
+    }).catch(err=>{console.log(err)})
+  }
+
+  getInvitation() {
+    console.log(this.state)
+    fetch(url + '/getInvitation', {
+      method: 'POST',
+      headers: {
+        "Content-Type": "application/json"
       },
-      player2: {
-        name: rowData.name,
-        id: rowData._id
+      body: JSON.stringify({id:this.state.myID})
+    })
+    .then((response) => response.json())
+    .then((responseJson) => {
+      console.log('pass' + JSON.stringify(responseJson))
+      if (responseJson.success) {
+        console.log("My ID: " + this.state.myID);
+        Alert.alert(
+          'Game Invitation',
+          `${responseJson.invitation.name} wants to play a game with you!`,
+          [
+           {text: 'Decline', onPress: () => this.deleteInvitation(this.state.myID)},
+           {text: 'Accept', onPress: () => this.gameplay(this.state.myName,this.state.myID,responseJson.invitation.name,responseJson.invitation.id)},
+          ],
+          { cancelable: false }
+          )
       }
+    })
+    .catch((err) => {
+      console.error("Error is: " + err);
+    });
+  }
+
+  checkInGame(id) {
+    fetch(url+ '/checkingame', {
+      method: 'POST',
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: {id:this.state.myID}
+    })
+    .then((response) => response.json())
+    .then((responseJson) => {
+      if (responseJson.game.inGame) {
+         AsyncStorage.setItem('game', JSON.stringify(
+           responseJson.game.gameId
+         ))
+         this.props.navigation.navigate('GameScreen')
+       }
+    })
+    .catch(err=>console.log(err))
+  }
+
+  componentDidMount() {
+    AsyncStorage.getItem('user')
+    .then(result => {
+      this.setState({
+        myID:result.id,
+        myName:result.id
+      })
+    })
+    .then(
+      fetch(url + '/users', {
+        method: 'GET',
+        headers: {
+          "Content-Type": "application/json"
+        },
+      })
+      .then((response) => response.json())
+      .then((responseJson) => {
+        this.setState ({
+          arr: responseJson
+        })
+        setInterval(() => this.getInvitation(),10000)
+        setInterval(() => this.checkInGame(this.state.myID),10000)
+      })
+      .catch((err) => {
+        console.error(err);
+      })
+    )
+    .catch((err) => {
+      console.error(err)})
+  }
+
+  selectPlayer(rowData) {
+    fetch(url+'/giveInvitation', {
+      method:'POST',
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        player1: {
+           name: this.state.myName,
+           id: this.state.myId
+         },
+         player2: {
+           name: rowData.name,
+           id: rowData._id
+         }
       })
     })
     .then((response) => response.json())
     .then((responseJson) => {
       if (responseJson.success) {
-        AsyncStorage.setItem('game', JSON.stringify(
-          responseJson.game
-        ))
-        this.props.navigation.navigate('GameScreen')
+        alert('Invitation sent!')
       } else {
-        alert('failed to load game')
+        alert('Invitation send fail')
       }
     })
     .catch((err) => {
       console.error(err);
     });
-  })
-    .catch(err => {console.log(err)})
   }
 
   render() {

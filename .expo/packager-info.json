@@ -2,7 +2,7 @@
   "expoServerPort": 19000,
   "expoServerNgrokUrl": "https://bf-759.celia96.horizonshackathon.exp.direct",
   "packagerNgrokUrl": "https://packager.bf-759.celia96.horizonshackathon.exp.direct",
-  "ngrokPid": 22451,
-  "packagerPort": 19004,
-  "packagerPid": 22437
+  "ngrokPid": 23143,
+  "packagerPort": 19001,
+  "packagerPid": 23126
 }
