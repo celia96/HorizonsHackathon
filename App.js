@@ -43,13 +43,7 @@ class HomePage extends React.Component {
   static navigationOptions = {
     title: 'HomePage'
   };
-  // homeContainer: {
-  //   flex: 1,
-  //   marginTop: 20,
-  //   backgroundColor: 'white',
-  //   alignItems: 'center',
-  //   justifyContent: 'center',
-  // },
+
   render () {
     return (
       <View style = {{flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: 'black'}}>
@@ -132,7 +126,6 @@ class Register extends React.Component {
     this.state = {
       username: ''
     }
-    //this.socket = SocketIOClient(url);
   }
 
   register() {
@@ -144,10 +137,6 @@ class Register extends React.Component {
       user.name = thisEnv.state.username;
       this.props.navigation.navigate('Players')
 
-      // AsyncStorage.setItem('user', JSON.stringify({
-      //   id: id,
-      //   name: thisEnv.state.username
-      // }));
     })
 
   }
@@ -238,7 +227,6 @@ class Players extends React.Component {
       myName:'',
       runInterval: true
     }
-    // this.socket.on('message', this.onReceivedMessage); // get invitation
   }
 
   gameplay(me, myid, opp, oppid) {
@@ -296,7 +284,6 @@ class Players extends React.Component {
 
   render() {
     const ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
-    // console.log("render", this.state);
     return (
       <View style={styles.homeContainer}>
         <ListView
@@ -346,7 +333,7 @@ class CameraScreen extends React.Component {
       myID: '',
       winner: ''
     };
-    // this.socket = SocketIOClient(url);
+
   }
 
   async componentWillMount() {
@@ -361,11 +348,7 @@ class CameraScreen extends React.Component {
 
     console.log("game", game);
     console.log("user", user);
-    // myObj.player1 = result.player1
-    // myObj.player2 = result.player2
-    // myObj.gameid = result.id
-    // myObj.myID = result2.id
-    // console.log("3", myOsbj);
+
     this.setState({
       gameid: game.id,
       player1: game.player1,
@@ -394,7 +377,7 @@ class CameraScreen extends React.Component {
     if (this.camera) {
       console.log("Shoot!")
       // If the picture contains the face
-      if (this.state.faces) {
+      if (this.state.faces.length !== 0) {
         // fetch post
         // decreasing the heart of the other player
         console.log("There is a face!");
@@ -403,34 +386,6 @@ class CameraScreen extends React.Component {
           game: this.state.gameid,
           myId: this.state.myID
         }
-        //
-        // if (this.state.player1.id !== this.state.myID) {
-        //   var life = this.state.player1.life - 1
-        //   if (life === 0) {
-        //     this.setState({
-        //       gameover: true,
-        //       winner: this.state.player2.name
-        //     })
-        //   }
-        //   this.setState({
-        //     player1: {
-        //       life: life
-        //     }
-        //   })
-        // } else {
-        //   var life = this.state.player2.life - 1
-        //   if (life === 0) {
-        //     this.setState({
-        //       gameover: true,
-        //       winner: this.state.player1.name
-        //     })
-        //   }
-        //   this.setState({
-        //     player2: {
-        //       life: life
-        //     }
-        //   })
-        // }
         Alert.alert(
           'Shot',
           `You just shot the opponent!`,
@@ -494,7 +449,6 @@ class CameraScreen extends React.Component {
   }
 
   renderFace({ bounds, faceID, rollAngle, yawAngle }) {
-
     return (
       <View
         key={faceID}
@@ -511,9 +465,7 @@ class CameraScreen extends React.Component {
             top: bounds.origin.y,
           },
         ]}>
-        <Text style={styles.faceText}>ID: {faceID}</Text>
-        <Text style={styles.faceText}>rollAngle: {rollAngle.toFixed(0)}</Text>
-        <Text style={styles.faceText}>yawAngle: {yawAngle.toFixed(0)}</Text>
+        <Text style={styles.faceText}>Face Detected</Text>
       </View>
     );
   }
